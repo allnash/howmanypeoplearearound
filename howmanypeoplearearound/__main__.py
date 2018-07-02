@@ -59,6 +59,7 @@ def localhost_report(json):
     report = {"cellphones": json, "reader_seen_time": unix_time}
     try:
         requests.post('http://localhost:8000/json/cellphone_sightings', json=report)
+        print("Cellphone sighting data posted")
     except ConnectionError:
         print("Error posting cellphone sighting data")
 
