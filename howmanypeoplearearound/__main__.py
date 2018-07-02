@@ -52,10 +52,8 @@ def iftttpost(iphones, androids):
 def localhost_report(json):
     """Posts data to localhost server."""
     # By Nash Gadre (github: @allnash)
-    report = {}
-    report["cellphones"] = json
-    print(requests.post('http://localhost:9000/api/sightings',
-                        data=report).text)
+    report = {"cellphones": json, "reader_seen_time": datetime.datetime.now()}
+    requests.post('http://localhost:9000/json/reader_sightings', data=report)
 
 
 def showTimer(timeleft):
