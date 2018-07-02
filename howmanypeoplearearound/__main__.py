@@ -5,7 +5,6 @@ import platform
 import subprocess
 import json
 import time
-import calendar
 import requests
 import datetime
 
