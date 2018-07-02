@@ -55,7 +55,7 @@ def iftttpost(iphones, androids):
 def localhost_report(json):
     """Posts data to localhost server."""
     # By Nash Gadre (github: @allnash)
-    unix_time = calendar.timegm(time.gmtime())
+    unix_time = long(time.time() * 1000)
     report = {"cellphones": json, "reader_seen_time": unix_time}
     try:
         requests.post('http://localhost:8000/json/cellphone_sightings', json=report)
