@@ -11,16 +11,18 @@ import datetime
 import netifaces
 import click
 
+from analysis import analyze_file
 from oui import oui
-# from analysis import analyze_file
 from colors import *
 
 if os.name != 'nt':
     from pick import pick
 
+
 def which(program):
     """Determines whether program exists
     """
+
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
@@ -34,7 +36,8 @@ def which(program):
             exe_file = os.path.join(path, program)
             if is_exe(exe_file):
                 return exe_file
-    raise
+    raise Exception("Error in which program.")
+
 
 def iftttpost(iphones, androids):
     """Posts data to an IFTTT channel to save in Google Sheets"""
@@ -43,7 +46,9 @@ def iftttpost(iphones, androids):
     report["value1"] = datetime.datetime.now().strftime("%m-%d-%Y %H:%M:%S")
     report["value2"] = iphones
     report["value3"] = androids
-    print(requests.post('https://maker.ifttt.com/trigger/howmanypeoplearearound/with/key/khiN5Xs3nUOmx0ZGKrY8t', data=report).text)
+    print(requests.post('https://maker.ifttt.com/trigger/howmanypeoplearearound/with/key/khiN5Xs3nUOmx0ZGKrY8t',
+                        data=report).text)
+
 
 def showTimer(timeleft):
     """Shows a countdown timer"""
@@ -61,10 +66,12 @@ def showTimer(timeleft):
         time.sleep(0.1)
     print("")
 
+
 def fileToMacSet(path):
     with open(path, 'r') as f:
         maclist = f.readlines()
     return set([x.strip() for x in maclist])
+
 
 @click.command()
 @click.option('-a', '--adapter', default='', help='adapter to use')
@@ -75,26 +82,30 @@ def fileToMacSet(path):
 @click.option('--number', help='just print the number', is_flag=True)
 @click.option('-j', '--jsonprint', help='print JSON of cellphone data', is_flag=True)
 @click.option('-n', '--nearby', help='only quantify signals that are nearby (rssi > -70)', is_flag=True)
-@click.option('--allmacaddresses', help='do not check MAC addresses against the OUI database to only recognize known cellphone manufacturers', is_flag=True)  # noqa
+@click.option('--allmacaddresses',
+              help='do not check MAC addresses against the OUI database to only recognize known cellphone manufacturers',
+              is_flag=True)  # noqa
 @click.option('--nocorrection', help='do not apply correction', is_flag=True)
 @click.option('--loop', help='loop forever', is_flag=True)
 @click.option('--port', default=8001, help='port to use when serving analysis')
 @click.option('--sort', help='sort cellphone data by distance (rssi)', is_flag=True)
 @click.option('--targetmacs', help='read a file that contains target MAC addresses', default='')
-def main(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddresses, nocorrection, loop, analyze, port, sort, targetmacs):
+def main(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddresses, nocorrection, loop, analyze, port,
+         sort, targetmacs):
     if analyze != '':
         analyze_file(analyze, port)
         return
     if loop:
         while True:
             adapter = scan(adapter, scantime, verbose, number,
-                 nearby, jsonprint, out, allmacaddresses, nocorrection, loop, sort, targetmacs)
+                           nearby, jsonprint, out, allmacaddresses, nocorrection, loop, sort, targetmacs)
     else:
         scan(adapter, scantime, verbose, number,
              nearby, jsonprint, out, allmacaddresses, nocorrection, loop, sort, targetmacs)
 
 
-def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddresses, nocorrection, loop, sort, targetmacs):
+def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddresses, nocorrection, loop, sort,
+         targetmacs):
     """Monitor wifi signals to count the number of people around you"""
 
     # print("OS: " + os.name)
@@ -249,7 +260,7 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
     if number and not jsonprint:
         print("Total: {}".format(num_people))
         print("iPhones: {}  Androids: {}".format(iphones, androids))
-        #print(cellphone_people)
+        # print(cellphone_people)
         # adding IFTTT post
         iftttpost(iphones, androids)
     elif jsonprint:

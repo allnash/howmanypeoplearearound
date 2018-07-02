@@ -3,7 +3,7 @@ import datetime
 import json
 import sys
 
-from lotlyjs import *
+from plotlyjs import *
 
 
 def analyze_file(fname, port):

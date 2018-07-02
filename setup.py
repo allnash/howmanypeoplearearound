@@ -14,7 +14,7 @@ setup(
     install_requires=[
         "click",
         "netifaces",
-        "pick",
+        "pick", 'requests'
     ],
     setup_requires=[],
     tests_require=[],

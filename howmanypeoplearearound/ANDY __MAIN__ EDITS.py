@@ -34,7 +34,7 @@ def which(program):
             exe_file = os.path.join(path, program)
             if is_exe(exe_file):
                 return exe_file
-    raise
+    raise Exception("Not found")
 
 def iftttpost(iphones, androids):
     """Posts data to an IFTTT channel to save in Google Sheets"""

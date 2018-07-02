@@ -84,8 +84,8 @@ celerybeat-schedule
 venv/
 ENV/
 
-# Spyder project settings
-.spyderproject
+# Idea project settings
+.idea
 
-# Rope project settings
-.ropeproject
+# All Json files
+*.json
