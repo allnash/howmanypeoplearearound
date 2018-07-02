@@ -278,7 +278,7 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
         # adding IFTTT post
         # iftttpost(iphones, androids)
     elif jsonprint:
-        print(json.dumps(cellphone_people, indent=2))
+        # print(json.dumps(cellphone_people, indent=2))
         localhost_report(cellphone_people)
     else:
         if num_people == 0:
