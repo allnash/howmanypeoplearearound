@@ -5,11 +5,13 @@ import platform
 import subprocess
 import json
 import time
+import calendar
 import requests
 import datetime
 
 import netifaces
 import click
+from requests import ConnectionError
 
 from analysis import analyze_file
 from oui import oui
@@ -49,11 +51,17 @@ def iftttpost(iphones, androids):
     # print(requests.post('https://maker.ifttt.com/trigger/howmanypeoplearearound/with/key/khiN5Xs3nUOmx0ZGKrY8t',
     #                    data=report).text)
 
+
 def localhost_report(json):
     """Posts data to localhost server."""
     # By Nash Gadre (github: @allnash)
-    report = {"cellphones": json, "reader_seen_time": datetime.datetime.now()}
-    requests.post('http://localhost:9000/json/reader_sightings', data=report)
+    unix_time = calendar.timegm(time.gmtime())
+    report = {"cellphones": json, "reader_seen_time": unix_time}
+    try:
+        requests.post('http://localhost:8000/json/cellphone_sightings', json=report)
+    except ConnectionError:
+        print("Error posting cellphone sighting data")
+
 
 
 def showTimer(timeleft):
