@@ -3,8 +3,6 @@ import datetime
 import json
 import sys
 
-from plotlyjs import *
-
 
 def analyze_file(fname, port):
     lines = []

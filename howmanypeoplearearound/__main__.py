@@ -46,7 +46,15 @@ def iftttpost(iphones, androids):
     report["value1"] = datetime.datetime.now().strftime("%m-%d-%Y %H:%M:%S")
     report["value2"] = iphones
     report["value3"] = androids
-    print(requests.post('https://maker.ifttt.com/trigger/howmanypeoplearearound/with/key/khiN5Xs3nUOmx0ZGKrY8t',
+    # print(requests.post('https://maker.ifttt.com/trigger/howmanypeoplearearound/with/key/khiN5Xs3nUOmx0ZGKrY8t',
+    #                    data=report).text)
+
+def localhost_report(json):
+    """Posts data to localhost server."""
+    # By Nash Gadre (github: @allnash)
+    report = {}
+    report["cellphones"] = json
+    print(requests.post('http://localhost:9000/api/sightings',
                         data=report).text)
 
 
@@ -262,9 +270,10 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
         print("iPhones: {}  Androids: {}".format(iphones, androids))
         # print(cellphone_people)
         # adding IFTTT post
-        iftttpost(iphones, androids)
+        # iftttpost(iphones, androids)
     elif jsonprint:
         print(json.dumps(cellphone_people, indent=2))
+        localhost_report(cellphone_people)
     else:
         if num_people == 0:
             print("No one around (not even you!).")
