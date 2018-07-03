@@ -249,7 +249,7 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
         if len(dats) == 3:
             if ':' not in dats[0] or len(dats) != 3:
                 continue
-            if mac not in foundMacs:
+            if mac not in foundRealMacs:
                 foundRealMacs[mac] = []
             dats_2_split = dats[2].split(',')
             if len(dats_2_split) > 1:
@@ -348,7 +348,7 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
     elif jsonprint:
         # print(json.dumps(cellphone_people, indent=2))
         localhost_report_real(iphones, androids)
-        localhost_report(cellphone_people)
+        localhost_report(cellphone_macs)
     else:
         if num_people == 0:
             print("No one around (not even you!).")
