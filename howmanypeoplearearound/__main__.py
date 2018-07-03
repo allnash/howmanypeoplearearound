@@ -51,8 +51,22 @@ def iftttpost(iphones, androids):
     #                    data=report).text)
 
 
-def localhost_report(json):
+def localhost_report(apple, android):
     """Posts data to localhost server."""
+    # By Nash Gadre (github: @allnash)
+    unix_time = long(time.time() * 1000)
+    report = {"apple": apple,
+              "android": android,
+              "reader_seen_time": unix_time}
+    try:
+        # requests.post('http://localhost:8000/json/cellphone_metrics', json=report)
+        print("Cellphone probe request data posted")
+    except ConnectionError:
+        print("Error posting cellphone probe request data")
+
+
+def localhost_report_real(json):
+    """Posts Probe request data to localhost server."""
     # By Nash Gadre (github: @allnash)
     unix_time = long(time.time() * 1000)
     report = {"cellphones": json, "reader_seen_time": unix_time}
@@ -61,7 +75,6 @@ def localhost_report(json):
         print("Cellphone sighting data posted")
     except ConnectionError:
         print("Error posting cellphone sighting data")
-
 
 
 def showTimer(timeleft):
@@ -170,10 +183,21 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
     if not number:
         t1.join()
 
-    # Read tshark output
+    # Read tshark output for chatter coming from cellphones
     command = [
         tshark, '-r',
         '/tmp/tshark-temp', '-T',
+        'fields', '-e',
+        'wlan.sa', '-e',
+        'wlan.bssid', '-e',
+        'radiotap.dbm_antsignal'
+    ]
+    # Read tshark output for probe requests
+    command2 = [
+        tshark, '-r',
+        '/tmp/tshark-temp',
+        '-Y', 'wlan.fc.type_subtype == 0x0004',
+        '-T',
         'fields', '-e',
         'wlan.sa', '-e',
         'wlan.bssid', '-e',
@@ -184,6 +208,9 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
     run_tshark = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output, nothing = run_tshark.communicate()
+    run_tshark_probe = subprocess.Popen(
+        command2, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output_probe, nothing = run_tshark_probe.communicate()
 
     # read target MAC address
     targetmacset = set()
@@ -191,6 +218,8 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
         targetmacset = fileToMacSet(targetmacs)
 
     foundMacs = {}
+    foundRealMacs = {}
+
     for line in output.decode('utf-8').split('\n'):
         if verbose:
             print(line)
@@ -210,12 +239,38 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
                 rssi = float(dats_2_split[0])
             foundMacs[mac].append(rssi)
 
+    for line in output_probe.decode('utf-8').split('\n'):
+        if verbose:
+            print(line)
+        if line.strip() == '':
+            continue
+        mac = line.split()[0].strip().split(',')[0]
+        dats = line.split()
+        if len(dats) == 3:
+            if ':' not in dats[0] or len(dats) != 3:
+                continue
+            if mac not in foundMacs:
+                foundRealMacs[mac] = []
+            dats_2_split = dats[2].split(',')
+            if len(dats_2_split) > 1:
+                rssi = float(dats_2_split[0]) / 2 + float(dats_2_split[1]) / 2
+            else:
+                rssi = float(dats_2_split[0])
+            foundRealMacs[mac].append(rssi)
+
     if not foundMacs:
+        print("Found no signals, are you sure %s supports monitor mode?" % adapter)
+        return
+
+    if not foundRealMacs:
         print("Found no signals, are you sure %s supports monitor mode?" % adapter)
         return
 
     for key, value in foundMacs.items():
         foundMacs[key] = float(sum(value)) / float(len(value))
+
+    for key, value in foundRealMacs.items():
+        foundRealMacs[key] = float(sum(value)) / float(len(value))
 
     # Find target MAC address in foundMacs
     if targetmacset:
@@ -243,6 +298,7 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
         'LG Electronics (Mobile Communications)']
 
     cellphone_people = []
+    cellphone_macs = []
     androids = 0
     iphones = 0
     for mac in foundMacs:
@@ -259,6 +315,18 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
                     iphones += 1
                 else:
                     androids += 1
+
+    for mac in foundRealMacs:
+        oui_id = 'Not in OUI'
+        if mac[:8] in oui:
+            oui_id = oui[mac[:8]]
+        if verbose:
+            print(mac, oui_id, oui_id in cellphone)
+        if allmacaddresses or oui_id in cellphone:
+            if not nearby or (nearby and foundRealMacs[mac] > -70):
+                cellphone_macs.append(
+                    {'company': oui_id, 'rssi': foundRealMacs[mac], 'mac': mac})
+
     if sort:
         cellphone_people.sort(key=lambda x: x['rssi'], reverse=True)
     if verbose:
@@ -268,8 +336,8 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
     percentage_of_people_with_phones = 0.7
     if nocorrection:
         percentage_of_people_with_phones = 1
-    num_people = int(round(len(cellphone_people) /
-                           percentage_of_people_with_phones))
+    num_people = int(round(len(cellphone_people) / percentage_of_people_with_phones))
+    num_real_macs = int(round(len(cellphone_macs) / percentage_of_people_with_phones))
 
     if number and not jsonprint:
         print("Total: {}".format(num_people))
@@ -279,6 +347,7 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
         # iftttpost(iphones, androids)
     elif jsonprint:
         # print(json.dumps(cellphone_people, indent=2))
+        localhost_report_real(iphones, androids)
         localhost_report(cellphone_people)
     else:
         if num_people == 0:
