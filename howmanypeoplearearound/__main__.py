@@ -322,10 +322,9 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
             oui_id = oui[mac[:8]]
         if verbose:
             print(mac, oui_id, oui_id in cellphone)
-        if allmacaddresses or oui_id in cellphone:
-            if not nearby or (nearby and foundRealMacs[mac] > -70):
-                cellphone_macs.append(
-                    {'company': oui_id, 'rssi': foundRealMacs[mac], 'mac': mac})
+        if not nearby or (nearby and foundRealMacs[mac] > -70):
+            cellphone_macs.append(
+                {'company': oui_id, 'rssi': foundRealMacs[mac], 'mac': mac})
 
     if sort:
         cellphone_people.sort(key=lambda x: x['rssi'], reverse=True)
@@ -347,8 +346,8 @@ def scan(adapter, scantime, verbose, number, nearby, jsonprint, out, allmacaddre
         # iftttpost(iphones, androids)
     elif jsonprint:
         # print(json.dumps(cellphone_people, indent=2))
-        localhost_report_real(iphones, androids)
-        localhost_report(cellphone_macs)
+        localhost_report(iphones, androids)
+        localhost_report_real(cellphone_macs)
     else:
         if num_people == 0:
             print("No one around (not even you!).")
