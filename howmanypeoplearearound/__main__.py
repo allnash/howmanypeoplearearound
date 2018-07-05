@@ -51,15 +51,15 @@ def iftttpost(iphones, androids):
     #                    data=report).text)
 
 
-def localhost_report(apple, android):
+def localhost_report(iphones, androids):
     """Posts data to localhost server."""
     # By Nash Gadre (github: @allnash)
     unix_time = long(time.time() * 1000)
-    report = {"apple": apple,
-              "android": android,
+    report = {"iphones": iphones,
+              "androids": androids,
               "reader_seen_time": unix_time}
     try:
-        # requests.post('http://localhost:8000/json/cellphone_metrics', json=report)
+        requests.post('http://localhost:8000/json/cellphone_sightings_metrics', json=report)
         print("Cellphone probe request data posted")
     except ConnectionError:
         print("Error posting cellphone probe request data")
